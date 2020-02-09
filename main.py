@@ -310,7 +310,7 @@ def items_list(user_id, page):
             color = "primary"
             name = "closed_"
 
-        if i >= sum_cards - 1:
+        if i >= sum_cards-1 and sum_cards%8 != 0:
             items.append(["---", "primary", ""])
         else:
             items.append([cards[i][0], color, name + cards_index[i]])
