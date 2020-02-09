@@ -8,15 +8,16 @@ import random
 import os
 import psycopg2
 
+
 from keyboards import *
 from sql_commands import *
 from cards_logic import *
 
 # Ключи авторизации.
-token = "6bc9bbcee6d582876909b52dbc5c2a68d5334250aecb3250ece8d27f894dde5793dd69f1aa594aa3b3550"
-group_id = '191532694'
 
-#DATABASE_URL = os.environ['DATABASE_URL']
+token = os.environ.get('key')
+group_id = os.environ.get('group_id')
+DATABASE_URL = os.environ['DATABASE_URL']
 vk = vk_api.VkApi(token=token)
 vk._auth_token()
 vk.get_api()
@@ -28,8 +29,7 @@ MAX_PLAYERS = 6
 MAX_LOBBIES = 10
 
 try:
-    #connection = psycopg2.connect(DATABASE_URL, sslmode='require')
-    connection = sql.connect("lifeboat.sqlite", check_same_thread=False)
+    connection = psycopg2.connect(DATABASE_URL, sslmode='require')
     q = connection.cursor()
 
     q.execute('''CREATE TABLE user_info
@@ -100,7 +100,7 @@ def msg_k(user_id, the_keyboard, text):
 def is_user_in_game(user_id):
     res = False
     try:
-        connection = sql.connect("lifeboat.sqlite", check_same_thread=False)
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
         q = connection.cursor()
         q.execute("SELECT * FROM user_info WHERE User_ID = '%s'" % (user_id))
         result = q.fetchall()
@@ -115,7 +115,7 @@ def is_user_in_game(user_id):
 
 def any_lobby(user_id):
     try:
-        connection = sql.connect("lifeboat.sqlite", check_same_thread=False)
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
         q = connection.cursor()
         q.execute("SELECT * FROM lobby_info WHERE Is_Public = '%s' AND Players < '%s'" % (True, MAX_PLAYERS))
         result = q.fetchall()
@@ -151,7 +151,7 @@ def leave_lobby(user_id):
 
 
 def create_lobby(user_id, is_public):
-    connection = sql.connect("lifeboat.sqlite", check_same_thread=False)
+    connection = psycopg2.connect(DATABASE_URL, sslmode='require')
     q = connection.cursor()
     lobby_id = random.randint(1, 9999999)
     q.execute("SELECT * FROM lobby_info")
@@ -297,7 +297,7 @@ def get_player_cards(type):
 
 def get_player_info(role, lobby_id):
     try:
-        connection = sql.connect("lifeboat.sqlite", check_same_thread=False)
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
         q = connection.cursor()
         q.execute("SELECT * FROM user_info WHERE Role = '%s' and Lobby_ID = '%s'" % (role, lobby_id))
         result = q.fetchall()
@@ -316,7 +316,7 @@ while True:
                 request = event.object.text.lower()  # Обробатываем сообщение от пользователя.
                 payload = event.object.get("payload")
 
-                connection = sql.connect("lifeboat.sqlite", check_same_thread=False)
+                connection = psycopg2.connect(DATABASE_URL, sslmode='require')
                 q = connection.cursor()
                 q.execute("SELECT * FROM user_info WHERE User_ID = '%s'" % (user_id))
                 result = q.fetchall()
