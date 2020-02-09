@@ -9,15 +9,12 @@ import os
 import psycopg2
 
 
-from keyboards import *
-from sql_commands import *
-from cards_logic import *
-
 # Ключи авторизации.
-
+#
 token = os.environ.get('key')
 group_id = os.environ.get('group_id')
 DATABASE_URL = os.environ['DATABASE_URL']
+
 vk = vk_api.VkApi(token=token)
 vk._auth_token()
 vk.get_api()
@@ -76,6 +73,323 @@ try:
     print("Создаём базу.")
 except Exception as E:
     print("База уже создана.")
+
+
+def get_card_by_type_number(type, number):
+    try:
+        connection = sql.connect("cards.db", check_same_thread=False)
+        q = connection.cursor()
+        q.execute("SELECT * FROM %s" % type)
+        result = q.fetchall()
+        return result[number]
+    except Exception as e:
+        print("'get_card_by_type_number'  %s | %s" % (str(type), str(number)))
+        return " "
+
+def get_all_type_cards(name):
+    try:
+        connection = sql.connect("cards.db", check_same_thread=False)
+        q = connection.cursor()
+        q.execute("SELECT * FROM %s" %name)
+        result = q.fetchall()
+        connection.close()
+        loot = ""
+        for i in range(len(result)):
+            loot = loot + str(i) + ";"
+        loot = loot[:-1]
+        return loot
+    except Exception as e:
+        print("EXP")
+
+def make_cards(cards_array):
+    cards = ""
+    for i in range(len(cards_array)):
+        cards = cards + cards_array[i] + ";"
+    cards = cards[:-1]
+    return cards
+
+
+def shake_cards(cards):
+    try:
+        cards = cards.split(";")
+        for i in range(len(cards)):
+            first = cards[i]
+            random_number = random.randint(0, len(cards)-1)
+            second = cards[random_number]
+            cards[i] = second
+            cards[random_number] = first
+        return make_cards(cards)
+    except Exception as e:
+        print("Error in shake_cards")
+
+def set_user_info(param, user_id, value):
+    try:
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
+        q = connection.cursor()
+        q.execute(
+            "UPDATE user_info SET %s = '%s' WHERE User_ID = %s" % (param, value, user_id))
+        connection.commit()
+        connection.close()
+        print(str(user_id) + " | " + str(param) + " to: " + str(value))
+
+    except Exception as e:
+        print("Error in 'set_user_info'")
+
+
+def get_user_info(param, value):
+    try:
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
+        q = connection.cursor()
+        q.execute("SELECT * FROM user_info WHERE %s = %s" % (param, value))
+        result = q.fetchall()
+        connection.commit()
+        connection.close()
+        return result
+
+    except Exception as e:
+        print("Error in 'get_user_info'")
+
+
+def set_status(user_id, status):
+    try:
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
+        q = connection.cursor()
+        q.execute(
+            "UPDATE user_info SET Status = '%s' WHERE User_ID = '%s'" % (status, user_id))
+        connection.commit()
+        connection.close()
+        print(str(user_id) + " | status_changed to: " + str(status))
+    except Exception as e:
+        print("Error in 'set_status'")
+
+def delete_lobby(lobby_id):
+    try:
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
+        q = connection.cursor()
+        q.execute("DELETE FROM lobby_info WHERE Lobby_ID = '%s'" % (lobby_id))
+        connection.commit()
+        connection.close()
+
+    except Exception as e:
+        print("Error in 'delete lobby'")
+
+
+
+def get_lobby_info(param, value):
+    try:
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
+        q = connection.cursor()
+        q.execute("SELECT * FROM lobby_info WHERE %s = %s" % (param, value))
+        result = q.fetchall()
+        connection.commit()
+        connection.close()
+        return result
+
+    except Exception as e:
+        print("Error in 'get_user_info'")
+
+
+def set_lobby_info(param, lobby_id, value):
+    try:
+        connection = psycopg2.connect(DATABASE_URL, sslmode='require')
+        q = connection.cursor()
+        q.execute("UPDATE lobby_info SET %s = '%s' WHERE Lobby_ID = %s" % (param, value, lobby_id))
+        connection.commit()
+        connection.close()
+        print(str(lobby_id) + " | " + str(param) + " to: " + str(value))
+
+    except Exception as e:
+        print("Error in 'set_lobby_info'")
+
+
+
+def change_player_amount(lobby_id, add_number):
+    set_lobby_info("Players", lobby_id, get_lobby_info("Lobby_ID", lobby_id)[0][2] + add_number)
+
+
+
+def get_button(label, color, payload):
+    return {
+        "action": {
+            "type": "text",
+            "payload": json.dumps(payload),
+            "label": label
+        },
+        "color": color
+    }
+
+
+
+def two_keyboard(text1, color1, payload1, text2, color2, payload2):
+    keyboard = {
+        "one_time": False,
+        "buttons": [
+            [get_button(text1, color1, payload1)],
+            [get_button(text2, color2, payload2)]
+        ]
+
+    }
+
+    keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+    keyboard = str(keyboard.decode('utf-8'))
+    return keyboard
+
+def card_keyboard():
+    keyboard = {
+        "inline": True,
+        "buttons": [
+            [get_button("Припасы", "primary", "loot_0")],
+            [get_button("Друг", "positive", "friend"), get_button("Враг", "negative", "enemy")]
+
+        ]
+
+    }
+
+    keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+    keyboard = str(keyboard.decode('utf-8'))
+    return keyboard
+
+
+def get_card_by_type_number(type, number):
+    try:
+        connection = sql.connect("cards.db", check_same_thread=False)
+        q = connection.cursor()
+        q.execute("SELECT * FROM %s" % type)
+        result = q.fetchall()
+        return result[number]
+    except Exception as e:
+        print("'get_card_by_type_number'  %s | %s" % (str(type), str(number)))
+        return " "
+
+def items_list(user_id, page):
+    user = get_user_info("User_ID", user_id)
+    cards_closed = str(user[0][10])
+    cards_open = str(user[0][8])
+    cards_active = str(user[0][9])
+
+    if cards_closed.__contains__(";"):
+        cards_closed = cards_closed.split(";")
+
+    if cards_open.__contains__(";"):
+        cards_open = cards_open.split(";")
+
+    if cards_active.__contains__(";"):
+        cards_active = cards_active.split(";")
+
+    sum_cards = len(cards_active) + len(cards_open) + len(cards_closed)
+
+    if sum_cards%8 != 0:
+        sum_cards = sum_cards+1
+
+    cards = []
+    cards_index = []
+    for i in range(len(cards_active)):
+        cards.append(get_card_by_type_number("loot", int(cards_active[i])))
+        cards_index.append(cards_active[i])
+
+    for i in range(len(cards_open)):
+        cards.append(get_card_by_type_number("loot", int(cards_open[i])))
+        cards_index.append(cards_open[i])
+
+    for i in range(len(cards_closed)):
+        cards.append(get_card_by_type_number("loot", int(cards_closed[i])))
+        cards_index.append(cards_closed[i])
+
+
+    items = []
+
+    if len(cards_index) == 0:
+        return
+
+    for i in range(page*8, page*8+8):
+        if i - len(cards_active) < 0:
+            color = "negative"
+            name = "active_"
+        elif i - len(cards_active) - len(cards_open) < 0:
+            color = "positive"
+            name = "opened_"
+        else:
+            color = "primary"
+            name = "closed_"
+
+        if i >= sum_cards - 1:
+            items.append(["---", "primary", ""])
+        else:
+            items.append([cards[i][0], color, name+cards_index[i]])
+
+    name = "На страницу: [%s]" % (page+2)
+    if page*8 - sum_cards +8>= 0:
+        page = -1
+        name = "На страницу: [1]"
+
+    keyboard = {
+                "inline": True,
+                "buttons": [[get_button(items[0][0], items[0][1], items[0][2]), get_button(items[1][0], items[1][1], items[1][2])],
+                   [get_button(items[2][0], items[2][1], items[2][2]), get_button(items[3][0], items[3][1], items[3][2])],
+                   [get_button(items[4][0], items[4][1], items[4][2]), get_button(items[5][0], items[5][1], items[5][2])],
+                   [get_button(items[6][0], items[6][1], items[6][2]), get_button(items[7][0], items[7][1], items[7][2])],
+                    [get_button(name, "secondary", "loot_"+str(page+1))]
+                ]
+
+        }
+
+    keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+    keyboard = str(keyboard.decode('utf-8'))
+    return keyboard
+
+
+def game_keyboard(user_id):
+    user = get_user_info("User_ID", user_id)
+    HP = user[0][4]
+    Strength = user[0][14]
+    Fight_Points = user[0][6]
+    Row_Points = user[0][5]
+
+    keyboard = {
+        "inline": False,
+        "buttons": [
+            [get_button("❤: " + str(HP), "secondary", ""), get_button("💪: " + str(Strength), "secondary", ""),
+             get_button("🥊: " + str(Fight_Points), "secondary", ""), get_button("🚣: " + str(Row_Points), "secondary", "")],
+            [get_button("Действия", "primary", "action"), get_button("Карты", "primary", "cards")]
+
+        ]
+
+    }
+
+    keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+    keyboard = str(keyboard.decode('utf-8'))
+    return keyboard
+
+
+def two_one_keyboard(text1, color1, payload1, text2, color2, payload2, text3, color3, payload3):
+    keyboard = {
+        "one_time": False,
+        "buttons": [
+            [get_button(text1, color1, payload1), get_button(text2, color2, payload2)],
+                        [get_button(text3, color3, payload3)]
+        ]
+
+    }
+
+    keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+    keyboard = str(keyboard.decode('utf-8'))
+    return keyboard
+
+def three_keyboard(text1, color1, payload1, text2, color2, payload2, text3, color3, payload3):
+    keyboard = {
+        "one_time": False,
+        "buttons": [
+            [get_button(text1, color1, payload1)],
+            [get_button(text2, color2, payload2)],
+            [get_button(text3, color3, payload3)]
+        ]
+
+    }
+
+    keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
+    keyboard = str(keyboard.decode('utf-8'))
+    return keyboard
+
 
 def msg(user_id, text):
     vk.method("messages.send",
@@ -419,5 +733,6 @@ while True:
 
 
     except Exception as e:
-        print("Error"/0)
+        print("Error")
+        msg(137155471, "Error")
         time.sleep(1)
