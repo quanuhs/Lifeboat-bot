@@ -502,7 +502,7 @@ def clear_user(user_id):
     set_user_info("Fight_Player", user_id, -1)
     set_user_info("Cards_Open", user_id, "")
     set_user_info("Cards_Activated", user_id, "")
-    set_user_info   ("Cards_Closed", user_id, "")
+    set_user_info("Cards_Closed", user_id, "")
 
 #Cards_Logic
 def get_lobby_loot_card(lobby_id, position):
@@ -579,8 +579,8 @@ def set_roles(lobby):
     for i in range(lobby[0][2]):
         set_user_info("Friend", users[i][0], friends[i])
         set_user_info("Enemy", users[i][0], enemies[i])
-        msg_k(user[i][0], game_keyboard(user[i][0]),
-              get_player(user[i][0], "friend") + "\n\n" + get_player(user[i][0], "enemy"))
+        msg_k(users[i][0], game_keyboard(users[i][0]),
+              get_player(users[i][0], "friend") + "\n\n" + get_player(users[i][0], "enemy"))
 
 def get_player(user_id, type):
     user = get_user_info("User_ID", user_id)
