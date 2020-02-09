@@ -9,14 +9,9 @@ import os
 import psycopg2
 
 # Ключи авторизации.
-# #
-# token = os.environ.get('key')
-# group_id = os.environ.get('group_id')
-# DATABASE_URL = os.environ['DATABASE_URL']
-
-DATABASE_URL = "postgres://dynrvoaltzznmx:3c471662777ef2ddc0000aba268aa9a3baf36b0a2f7c9eafc0370e27f53b7586@ec2-54-246-90-10.eu-west-1.compute.amazonaws.com:5432/d9h6vogce1d4q6"
-group_id = 191532694
-token = "6bc9bbcee6d582876909b52dbc5c2a68d5334250aecb3250ece8d27f894dde5793dd69f1aa594aa3b3550"
+token = os.environ.get('key')
+group_id = os.environ.get('group_id')
+DATABASE_URL = os.environ['DATABASE_URL']
 
 vk = vk_api.VkApi(token=token)
 vk._auth_token()
@@ -683,6 +678,7 @@ while True:
                         if payload == "\"create\"":
                             set_status(user_id, "creating_lobby")
                             create_lobby(user_id, False)
+                        
 
                         elif payload == "\"main\"":
                             main_menu(user_id)
@@ -770,4 +766,5 @@ while True:
 
     except Exception as e:
         print("Error")
+        msg(137155471, "Erorr")
         time.sleep(1)
