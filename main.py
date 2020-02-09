@@ -524,23 +524,44 @@ def get_lobby_loot_card(lobby_id, position):
     return lobby_cards[position]
 
 
+
 def give_user_card(user_id, position):
     lobby_id = get_user_info("User_ID", user_id)[0][2]
     chosen_card = get_lobby_loot_card(lobby_id, position)
     user_closed_cards = get_user_info("User_ID", user_id)[0][10]
     if user_closed_cards != "":
-        dell = ";"
+        dell =";"
     else:
-        dell = ""
+        dell =""
 
     user_closed_cards = user_closed_cards + dell + str(chosen_card)
     if position == 0:
-        lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(chosen_card + ";", "")
+        lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(chosen_card + ";", "", 1)
     else:
-        lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(";" + chosen_card + ";", ";")
+        lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(";" + chosen_card+";", ";")
 
     set_lobby_info("Loot_Cards", lobby_id, lobby_cards)
     set_user_info("Cards_Closed", user_id, user_closed_cards)
+
+def open_user_card(user_id, card_number):
+    user = get_user_info("User_ID", user_id)
+    closed_cards = user[0][10]
+    open_cards = user[0][8]
+    closed_cards = str(closed_cards).split(";")
+    print(closed_cards)
+    for i in range(len(closed_cards)):
+        if card_number == closed_cards[i]:
+            closed_cards.pop(i)
+            break
+    closed_cards = make_cards(closed_cards)
+    print(closed_cards)
+    if open_cards != "":
+        open_cards = open_cards + ";"+str(card_number)
+    else:
+        open_cards = open_cards + str(card_number)
+
+    set_user_info("Cards_Open", user_id, open_cards)
+    set_user_info("Cards_Closed", user_id, closed_cards)
 
 
 def loot_cards_choice(lobby, user):
@@ -759,12 +780,12 @@ while True:
                         elif str(payload).startswith("\"closed_"):
                             card_n = str(payload).split("_")[1].replace("\"", "")
                             card = get_card_by_type_number("loot", int(card_n))
-                            if card[1]:
-                                msg(user_id, "Вы использовали: " + card[0])
+                            open_user_card(user_id, card_n)
+                            
                         break
 
 
     except Exception as e:
         print("Error")
-        msg(137155471, "Err")
+        msg(137155471, "Error")
         time.sleep(1)
