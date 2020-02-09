@@ -766,5 +766,5 @@ while True:
 
     except Exception as e:
         print("Error")
-        msg(137155471, "Erorr")
+        msg(137155471, "Err")
         time.sleep(1)
