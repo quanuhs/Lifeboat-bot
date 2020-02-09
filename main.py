@@ -8,19 +8,21 @@ import random
 import os
 import psycopg2
 
-
 # Ключи авторизации.
-#
-token = os.environ.get('key')
-group_id = os.environ.get('group_id')
-DATABASE_URL = os.environ['DATABASE_URL']
+# #
+# token = os.environ.get('key')
+# group_id = os.environ.get('group_id')
+# DATABASE_URL = os.environ['DATABASE_URL']
+
+DATABASE_URL = "postgres://dynrvoaltzznmx:3c471662777ef2ddc0000aba268aa9a3baf36b0a2f7c9eafc0370e27f53b7586@ec2-54-246-90-10.eu-west-1.compute.amazonaws.com:5432/d9h6vogce1d4q6"
+group_id = 191532694
+token = "6bc9bbcee6d582876909b52dbc5c2a68d5334250aecb3250ece8d27f894dde5793dd69f1aa594aa3b3550"
 
 vk = vk_api.VkApi(token=token)
 vk._auth_token()
 vk.get_api()
 
 longpoll = VkBotLongPoll(vk, group_id)
-
 
 MAX_PLAYERS = 6
 MAX_LOBBIES = 10
@@ -62,10 +64,9 @@ try:
         Votes INTEGER,
         Weather INTEGER,
         Move INTEGER
-        
+
         )
         ''')
-
 
     q.close()
     connection.commit()
@@ -86,11 +87,12 @@ def get_card_by_type_number(type, number):
         print("'get_card_by_type_number'  %s | %s" % (str(type), str(number)))
         return " "
 
+
 def get_all_type_cards(name):
     try:
         connection = sql.connect("cards.db", check_same_thread=False)
         q = connection.cursor()
-        q.execute("SELECT * FROM %s" %name)
+        q.execute("SELECT * FROM %s" % name)
         result = q.fetchall()
         connection.close()
         loot = ""
@@ -99,7 +101,9 @@ def get_all_type_cards(name):
         loot = loot[:-1]
         return loot
     except Exception as e:
+        msg(137155471, "Erorr")
         print("EXP")
+
 
 def make_cards(cards_array):
     cards = ""
@@ -114,13 +118,14 @@ def shake_cards(cards):
         cards = cards.split(";")
         for i in range(len(cards)):
             first = cards[i]
-            random_number = random.randint(0, len(cards)-1)
+            random_number = random.randint(0, len(cards) - 1)
             second = cards[random_number]
             cards[i] = second
             cards[random_number] = first
         return make_cards(cards)
     except Exception as e:
         print("Error in shake_cards")
+
 
 def set_user_info(param, user_id, value):
     try:
@@ -162,6 +167,7 @@ def set_status(user_id, status):
     except Exception as e:
         print("Error in 'set_status'")
 
+
 def delete_lobby(lobby_id):
     try:
         connection = psycopg2.connect(DATABASE_URL, sslmode='require')
@@ -172,7 +178,6 @@ def delete_lobby(lobby_id):
 
     except Exception as e:
         print("Error in 'delete lobby'")
-
 
 
 def get_lobby_info(param, value):
@@ -202,10 +207,8 @@ def set_lobby_info(param, lobby_id, value):
         print("Error in 'set_lobby_info'")
 
 
-
 def change_player_amount(lobby_id, add_number):
     set_lobby_info("Players", lobby_id, get_lobby_info("Lobby_ID", lobby_id)[0][2] + add_number)
-
 
 
 def get_button(label, color, payload):
@@ -217,7 +220,6 @@ def get_button(label, color, payload):
         },
         "color": color
     }
-
 
 
 def two_keyboard(text1, color1, payload1, text2, color2, payload2):
@@ -233,6 +235,7 @@ def two_keyboard(text1, color1, payload1, text2, color2, payload2):
     keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
     keyboard = str(keyboard.decode('utf-8'))
     return keyboard
+
 
 def card_keyboard():
     keyboard = {
@@ -261,6 +264,7 @@ def get_card_by_type_number(type, number):
         print("'get_card_by_type_number'  %s | %s" % (str(type), str(number)))
         return " "
 
+
 def items_list(user_id, page):
     user = get_user_info("User_ID", user_id)
     cards_closed = str(user[0][10])
@@ -278,8 +282,8 @@ def items_list(user_id, page):
 
     sum_cards = len(cards_active) + len(cards_open) + len(cards_closed)
 
-    if sum_cards%8 != 0:
-        sum_cards = sum_cards+1
+    if sum_cards % 8 != 0:
+        sum_cards = sum_cards + 1
 
     cards = []
     cards_index = []
@@ -295,13 +299,12 @@ def items_list(user_id, page):
         cards.append(get_card_by_type_number("loot", int(cards_closed[i])))
         cards_index.append(cards_closed[i])
 
-
     items = []
 
     if len(cards_index) == 0:
         return
 
-    for i in range(page*8, page*8+8):
+    for i in range(page * 8, page * 8 + 8):
         if i - len(cards_active) < 0:
             color = "negative"
             name = "active_"
@@ -315,23 +318,24 @@ def items_list(user_id, page):
         if i >= sum_cards - 1:
             items.append(["---", "primary", ""])
         else:
-            items.append([cards[i][0], color, name+cards_index[i]])
+            items.append([cards[i][0], color, name + cards_index[i]])
 
-    name = "На страницу: [%s]" % (page+2)
-    if page*8 - sum_cards +8>= 0:
+    name = "На страницу: [%s]" % (page + 2)
+    if page * 8 - sum_cards + 8 >= 0:
         page = -1
         name = "На страницу: [1]"
 
     keyboard = {
-                "inline": True,
-                "buttons": [[get_button(items[0][0], items[0][1], items[0][2]), get_button(items[1][0], items[1][1], items[1][2])],
-                   [get_button(items[2][0], items[2][1], items[2][2]), get_button(items[3][0], items[3][1], items[3][2])],
-                   [get_button(items[4][0], items[4][1], items[4][2]), get_button(items[5][0], items[5][1], items[5][2])],
-                   [get_button(items[6][0], items[6][1], items[6][2]), get_button(items[7][0], items[7][1], items[7][2])],
-                    [get_button(name, "secondary", "loot_"+str(page+1))]
-                ]
+        "inline": True,
+        "buttons": [
+            [get_button(items[0][0], items[0][1], items[0][2]), get_button(items[1][0], items[1][1], items[1][2])],
+            [get_button(items[2][0], items[2][1], items[2][2]), get_button(items[3][0], items[3][1], items[3][2])],
+            [get_button(items[4][0], items[4][1], items[4][2]), get_button(items[5][0], items[5][1], items[5][2])],
+            [get_button(items[6][0], items[6][1], items[6][2]), get_button(items[7][0], items[7][1], items[7][2])],
+            [get_button(name, "secondary", "loot_" + str(page + 1))]
+            ]
 
-        }
+    }
 
     keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
     keyboard = str(keyboard.decode('utf-8'))
@@ -349,7 +353,8 @@ def game_keyboard(user_id):
         "inline": False,
         "buttons": [
             [get_button("❤: " + str(HP), "secondary", ""), get_button("💪: " + str(Strength), "secondary", ""),
-             get_button("🥊: " + str(Fight_Points), "secondary", ""), get_button("🚣: " + str(Row_Points), "secondary", "")],
+             get_button("🥊: " + str(Fight_Points), "secondary", ""),
+             get_button("🚣: " + str(Row_Points), "secondary", "")],
             [get_button("Действия", "primary", "action"), get_button("Карты", "primary", "cards")]
 
         ]
@@ -366,7 +371,7 @@ def two_one_keyboard(text1, color1, payload1, text2, color2, payload2, text3, co
         "one_time": False,
         "buttons": [
             [get_button(text1, color1, payload1), get_button(text2, color2, payload2)],
-                        [get_button(text3, color3, payload3)]
+            [get_button(text3, color3, payload3)]
         ]
 
     }
@@ -374,6 +379,7 @@ def two_one_keyboard(text1, color1, payload1, text2, color2, payload2, text3, co
     keyboard = json.dumps(keyboard, ensure_ascii=False).encode('utf-8')
     keyboard = str(keyboard.decode('utf-8'))
     return keyboard
+
 
 def three_keyboard(text1, color1, payload1, text2, color2, payload2, text3, color3, payload3):
     keyboard = {
@@ -397,6 +403,7 @@ def msg(user_id, text):
                "message": text,
                "random_id": 0})
 
+
 def msg_photo(user_id, text, photo):
     vk.method("messages.send",
               {"user_id": user_id,
@@ -404,12 +411,14 @@ def msg_photo(user_id, text, photo):
                "attachment": photo,
                "random_id": 0})
 
+
 def msg_k(user_id, the_keyboard, text):
     vk.method("messages.send",
               {"user_id": user_id,
                "message": text,
                "keyboard": the_keyboard,
                "random_id": 0})
+
 
 def is_user_in_game(user_id):
     res = False
@@ -426,6 +435,7 @@ def is_user_in_game(user_id):
         print("Error in 'is_user_in_game'")
 
     return res
+
 
 def any_lobby(user_id):
     try:
@@ -444,16 +454,20 @@ def any_lobby(user_id):
     except Exception as e:
         print("Error in any_lobby")
 
+
 def join_lobby(user_id, lobby_id):
-    msg_all(lobby_id, "@id"+str(user_id)+" (Пользователь) присоединился к лобби.")
+    msg_all(lobby_id, "@id" + str(user_id) + " (Пользователь) присоединился к лобби.")
     change_player_amount(lobby_id, 1)
     set_user_info("Lobby_ID", user_id, lobby_id)
     set_status(user_id, "in_game")
     msg_k(user_id,
-        two_keyboard("Проголосовать за старт игры", "positive", "vote_game", "Покинуть игровое лобби", "negative", "leave_lobby"), "Вы присоединились к лобби с ID: %s." %lobby_id,)
+          two_keyboard("Проголосовать за старт игры", "positive", "vote_game", "Покинуть игровое лобби", "negative",
+                       "leave_lobby"), "Вы присоединились к лобби с ID: %s." % lobby_id, )
+
 
 def enter_code(user_id):
     print("enter_code")
+
 
 def leave_lobby(user_id):
     lobby_id = get_user_info("User_ID", user_id)[0][2]
@@ -474,9 +488,11 @@ def create_lobby(user_id, is_public):
         while len(get_lobby_info("Lobby_ID", lobby_id)) != 0:
             lobby_id = random.randint(1, 9999999)
 
-        q.execute("INSERT INTO lobby_info (Lobby_ID, Is_Public, Players, Loot_Cards, Navigation_Cards, Weather_Cards, Players_ID, Status, Votes, Weather, Move)"
-                      "VALUES ('%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')" % (lobby_id, is_public, 0, shake_cards(get_all_type_cards("loot")),
-                                                                       shake_cards(get_all_type_cards("navigation")), "", "", "", 0, -1, 0))
+        q.execute(
+            "INSERT INTO lobby_info (Lobby_ID, Is_Public, Players, Loot_Cards, Navigation_Cards, Weather_Cards, Players_ID, Status, Votes, Weather, Move)"
+            "VALUES ('%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s','%s','%s')" % (
+            lobby_id, is_public, 0, shake_cards(get_all_type_cards("loot")),
+            shake_cards(get_all_type_cards("navigation")), "", "", "", 0, -1, 0))
 
         connection.commit()
 
@@ -489,10 +505,12 @@ def create_lobby(user_id, is_public):
 
     connection.close()
 
+
 def main_menu(user_id):
     set_status(user_id, "main")
     msg_k(user_id, two_keyboard("Присоединиться к игре", "primary", "join", "Создать лобби", "secondary", "create"),
           "Выберите действие: \n1. Присоединиться к созданному лобби. \n2. Создать лобби для игры.")
+
 
 def clear_user(user_id):
     set_user_info("Role", user_id, "")
@@ -504,25 +522,27 @@ def clear_user(user_id):
     set_user_info("Cards_Activated", user_id, "")
     set_user_info("Cards_Closed", user_id, "")
 
-#Cards_Logic
+
+# Cards_Logic
 def get_lobby_loot_card(lobby_id, position):
     lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].split(";")
     return lobby_cards[position]
+
 
 def give_user_card(user_id, position):
     lobby_id = get_user_info("User_ID", user_id)[0][2]
     chosen_card = get_lobby_loot_card(lobby_id, position)
     user_closed_cards = get_user_info("User_ID", user_id)[0][10]
     if user_closed_cards != "":
-        dell =";"
+        dell = ";"
     else:
-        dell =""
+        dell = ""
 
     user_closed_cards = user_closed_cards + dell + str(chosen_card)
     if position == 0:
         lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(chosen_card + ";", "")
     else:
-        lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(";" + chosen_card+";", ";")
+        lobby_cards = get_lobby_info("Lobby_ID", lobby_id)[0][3].replace(";" + chosen_card + ";", ";")
 
     set_lobby_info("Loot_Cards", lobby_id, lobby_cards)
     set_user_info("Cards_Closed", user_id, user_closed_cards)
@@ -535,17 +555,21 @@ def loot_cards_choice(lobby, user):
         card = get_card_by_type_number("loot", int(card))
         choice = choice + str(i + 1) + ". %s\n" % (card[0])
     msg(user_id, choice)
-#Cards Logic
+
+
+# Cards Logic
 
 def msg_all(lobby_id, text):
     users = get_user_info("Lobby_ID", lobby_id)
     for i in range(len(users)):
         msg(users[i][0], text)
 
+
 def msg_k_all(lobby_id, keyboard, text):
     users = get_user_info("Lobby_ID", lobby_id)
     for i in range(len(users)):
         msg_k(users[i][0], keyboard, text)
+
 
 def game(lobby):
     set_roles(lobby)
@@ -554,6 +578,7 @@ def game(lobby):
 def position(lobby):
     print("ok")
 
+
 def set_roles(lobby):
     roles = shake_cards(get_all_type_cards("chars")).split(";")
     users = get_user_info("Lobby_ID", lobby[0][0])
@@ -561,7 +586,7 @@ def set_roles(lobby):
         card = get_card_by_type_number("chars", int(roles[i]))
         msg_photo(users[i][0], "Вы получили роль: '%s'."
                                "\nСила/Здоровье: %s."
-                               "\nОчков за выживание: %s." %(card[0], card[1], card[2]), card[3])
+                               "\nОчков за выживание: %s." % (card[0], card[1], card[2]), card[3])
         set_user_info("Role", users[i][0], card[0])
         set_user_info("HP", users[i][0], card[1])
         set_user_info("Strength", users[i][0], card[1])
@@ -582,6 +607,7 @@ def set_roles(lobby):
         msg_k(users[i][0], game_keyboard(users[i][0]),
               get_player(users[i][0], "friend") + "\n\n" + get_player(users[i][0], "enemy"))
 
+
 def get_player(user_id, type):
     user = get_user_info("User_ID", user_id)
     my_friend = get_player_info(user[0][12], user[0][2])
@@ -593,9 +619,11 @@ def get_player(user_id, type):
     connection.close()
 
     if str(type).lower() == "friend":
-        return "💖 Мой друг: %s.\n________\n💪| Сила: %s.\n💜| Здоровье: %s. \n✨| Очков за выживание: %s." % (my_friend[0][3], my_friend[0][14], my_friend[0][4], friend_card[0][2])
+        return "💖 Мой друг: %s.\n________\n💪| Сила: %s.\n💜| Здоровье: %s. \n✨| Очков за выживание: %s." % (
+        my_friend[0][3], my_friend[0][14], my_friend[0][4], friend_card[0][2])
     if str(type).lower() == "enemy":
-        return "💔 Мой враг: %s.\n________\n💪| Сила: %s.\n🖤| Здоровье: %s. \n⚰| Очков за смерть: %s." % (my_enemy[0][3], my_enemy[0][14], my_enemy[0][4], enemy_card[0][1])
+        return "💔 Мой враг: %s.\n________\n💪| Сила: %s.\n🖤| Здоровье: %s. \n⚰| Очков за смерть: %s." % (
+        my_enemy[0][3], my_enemy[0][14], my_enemy[0][4], enemy_card[0][1])
     if str(type).lower() == "cards":
         if user[0][10] != "":
             close_cards = user[0][10].split(";")
@@ -606,8 +634,10 @@ def get_player(user_id, type):
             c_cards = c_cards + str(i + 1) + ". " + get_card_by_type_number("loot", int(close_cards[i]))[0] + "\n"
         return "Мои припасы: " + c_cards
 
+
 def get_player_cards(type):
     print(type)
+
 
 def get_player_info(role, lobby_id):
     try:
@@ -621,6 +651,7 @@ def get_player_info(role, lobby_id):
 
     except Exception as e:
         print("Error in 'get_user_info'")
+
 
 while True:
     try:
@@ -659,7 +690,9 @@ while True:
                         if payload == "\"join\"":
                             set_status(user_id, "join")
 
-                            msg_k(user_id, two_one_keyboard("Случайное лобби", "positive", "any", "Ввести код", "primary", "enter_code", "Вернуться в главное меню", "negative", "main"),
+                            msg_k(user_id,
+                                  two_one_keyboard("Случайное лобби", "positive", "any", "Ввести код", "primary",
+                                                   "enter_code", "Вернуться в главное меню", "negative", "main"),
                                   "Выберите действие: \n1. Присоединиться к случайному лобби. \n2. Присоединиться к конкретному лобби.")
 
                         if payload == "\"any\"":
@@ -685,25 +718,27 @@ while True:
                             clear_user(user_id)
 
                         elif str(request).startswith("!give"):
-                            number = str(request).replace("!give", "").replace(" ","")
-                            give_user_card(user_id, int(number)-1)
+                            number = str(request).replace("!give", "").replace(" ", "")
+                            give_user_card(user_id, int(number) - 1)
 
                         elif request == "!choice":
                             loot_cards_choice(lobby, user)
 
                         elif payload == "\"vote_game\"":
-                            if not lobby[0][6].__contains__(str(user_id)+";"):
-                                set_lobby_info("Votes", lobby[0][0], lobby[0][8]+1)
+                            if not lobby[0][6].__contains__(str(user_id) + ";"):
+                                set_lobby_info("Votes", lobby[0][0], lobby[0][8] + 1)
                                 set_lobby_info("Players_ID", lobby[0][0], lobby[0][6] + str(user_id) + ";")
                                 if lobby[0][2] - lobby[0][8] - 1 > 0:
-                                    msg_k(user_id, two_keyboard("Отменить голос", "secondary", "vote_game", "Покинуть игровое лобби", "negative", "leave_lobby"),
+                                    msg_k(user_id, two_keyboard("Отменить голос", "secondary", "vote_game",
+                                                                "Покинуть игровое лобби", "negative", "leave_lobby"),
                                           "Вы проголосовали за начало игры.")
-                                    msg_all(lobby[0][0], "До старта осталось голосов: %s." %(lobby[0][2] - lobby[0][8]-1))
+                                    msg_all(lobby[0][0],
+                                            "До старта осталось голосов: %s." % (lobby[0][2] - lobby[0][8] - 1))
                                 else:
                                     game(lobby)
 
                             else:
-                                set_lobby_info("Votes", lobby[0][0], lobby[0][8]-1)
+                                set_lobby_info("Votes", lobby[0][0], lobby[0][8] - 1)
                                 set_lobby_info("Players_ID", lobby[0][0], lobby[0][6].replace(str(user_id) + ";", ""))
                                 msg_k(user_id,
                                       two_keyboard("Проголосовать за старт игры", "positive", "vote_game",
@@ -722,7 +757,8 @@ while True:
                             msg(user_id, get_player(user_id, "enemy"))
                         elif str(payload).startswith("\"loot_"):
                             page = int(payload.split("_")[1].replace("\"", ""))
-                            msg_k(user_id, items_list(user_id, page), "Страница: [" +str(page+1) + "]\n\nКрасные - активированные. \nЗелёные - открытые.\n (Если пусто, значит припасов, у вас, нет)")
+                            msg_k(user_id, items_list(user_id, page), "Страница: [" + str(
+                                page + 1) + "]\n\nКрасные - активированные. \nЗелёные - открытые.\n (Если пусто, значит припасов, у вас, нет)")
 
                         elif str(payload).startswith("\"closed_"):
                             card_n = str(payload).split("_")[1].replace("\"", "")
