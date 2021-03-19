@@ -12,9 +12,9 @@ from keyboards import *
 from sql_commands import *
 from cards_logic import *
 
-# Ключи авторизации.
-token = "6bc9bbcee6d582876909b52dbc5c2a68d5334250aecb3250ece8d27f894dde5793dd69f1aa594aa3b3550"
-group_id = '191532694'
+# Auth keys
+# token = #here you can enter your vk group token.
+# group_id = #here you can enter your vk group_id
 
 #DATABASE_URL = os.environ['DATABASE_URL']
 vk = vk_api.VkApi(token=token)
